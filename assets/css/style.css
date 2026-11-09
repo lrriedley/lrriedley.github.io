@@ -1,4 +1,4 @@
-/* Logan Riedley — portfolio
+/* Logan Riedley · portfolio
    Source of truth: design/tokens.json + design/README.md (Claude Design system "Logan Riedley").
    One theme (Ivory). No shadows: depth comes from hairlines. */
 
@@ -338,6 +338,126 @@ section > .card + .card { margin-top: 20px; }
 }
 .carousel-logo-frame--light {
   background: #fff;
+}
+
+.card .card-head--logo {
+  flex-direction: row;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+.card-logo {
+  flex: 0 0 56px;
+  width: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  background: var(--surface-100);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+}
+.card-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.card-logo--light { background: #fff; }
+.card-logo--dark { background: #000; border-color: #000; }
+
+/* ---------- Menu list (Skills page) ---------- */
+
+.menu-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.menu-item {
+  padding: var(--space-3) 0;
+}
+.menu-item + .menu-item {
+  border-top: 1px solid var(--hairline);
+}
+
+.menu-item-name {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  line-height: 26px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.menu-item-note {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--ink-muted);
+  margin: var(--space-1) 0 0;
+}
+
+.menu-item-image {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-3);
+  border-radius: var(--radius-md);
+}
+
+/* ---------- Certification slider ---------- */
+
+.cert-viewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: var(--radius-md);
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: var(--brass-strong) var(--surface-100);
+}
+.cert-viewport::-webkit-scrollbar { height: 8px; }
+.cert-viewport::-webkit-scrollbar-track { background: var(--surface-100); }
+.cert-viewport::-webkit-scrollbar-thumb {
+  background: var(--brass-strong);
+  border-radius: var(--radius-pill);
+}
+
+.cert-track {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: var(--space-4);
+  gap: var(--space-4);
+}
+
+.cert-card {
+  flex: 0 0 260px;
+  width: 260px;
+  background: var(--surface-100);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  scroll-snap-align: start;
+}
+.cert-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: top;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-3);
+}
+.cert-card h3 {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+  margin: 0;
+}
+.cert-card .meta { margin-top: var(--space-1); }
+.cert-card .body-sm { margin-top: var(--space-2); }
+
+@media (max-width: 560px) {
+  .cert-card { flex-basis: 150px; width: 150px; }
 }
 
 .app-store-badge {
