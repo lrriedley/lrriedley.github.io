@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Git Workflow · Logan Riedley</title>
+<meta name="description" content="The branching, review, and release workflow Logan Riedley designed for Night District." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="nav-inner">
+    <a class="brand" href="index.html">Logan Riedley</a>
+    <nav class="tabs" aria-label="Primary">
+      <a href="assets/docs/logan-riedley-resume.pdf" target="_blank" rel="noopener">Résumé</a>
+      <a href="cover-letter.html">Cover Letter</a>
+      <!-- <a href="product-strategy.html">Product &amp; Strategy</a> -->
+      <a href="skills.html">Skills</a>
+      <a href="technical-work.html">Technical Work</a>
+      <a href="references.html">References</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <section class="hero">
+      <p class="eyebrow label">Documentation</p>
+      <h1 class="display-xl">Git Workflow</h1>
+      <p class="lede body-lg">
+        The branching, review, and release process I designed for Night District's engineering
+        team, from a feature branch to production.
+      </p>
+    </section>
+
+    <section>
+      <article class="card">
+        <p>
+          The <code>dev</code> branch always contains stable, deployable code. Protection rules
+          on the GitHub repository restrict direct commits to it.
+        </p>
+
+        <h2 class="display-md" style="margin-top: var(--space-5)">1. Git Pull</h2>
+        <p>First, pull to get the latest version of <code>dev</code>.</p>
+        <pre><code>git pull</code></pre>
+
+        <h2 class="display-md" style="margin-top: var(--space-5)">2. Branching</h2>
+        <p>
+          Before making changes, create a branch off <code>dev</code>. Branch names start with
+          one of the following categories, followed by a slash and a camelCase description:
+        </p>
+        <ul>
+          <li><code>feat/feature-name</code> — for adding a new feature</li>
+          <li><code>fix/what-was-fixed</code> — for fixing a bug</li>
+          <li><code>change/what-was-changed</code> — for making a minor change</li>
+          <li><code>test/testing-for-what</code> — for adding a new test</li>
+          <li><code>design/what-was-designed</code> — for altering a design</li>
+        </ul>
+        <p>
+          For instance, a branch for adding user authentication could be
+          <code>feat/user-authentication</code>. All work happens inside these feature branches.
+        </p>
+        <pre><code>git checkout -b &lt;feat/branch-name&gt;</code></pre>
+
+        <h2 class="display-md" style="margin-top: var(--space-5)">3. Initial Pull Request</h2>
+        <p>
+          Immediately after creating the branch, push it to the remote for full transparency and
+          early feedback. The PR name matches the branch name.
+        </p>
+        <pre><code>git push origin &lt;feature-branch&gt;</code></pre>
+
+        <h2 class="display-md" style="margin-top: var(--space-5)">4. Committing</h2>
+        <p>When ready to commit, review what's changed:</p>
+        <pre><code>git status</code></pre>
+        <p>Stage changed files:</p>
+        <pre><code>git add path/to/file</code></pre>
+        <p>
+          Commit with short statements describing the changes, separated by semicolons and
+          written in order:
+        </p>
+        <pre><code>git commit -m 'add new button component; add new button components to templates'</code></pre>
+        <pre><code>git commit -m 'add the stop directive to button component to prevent propagation'</code></pre>
+
+        <h2 class="display-md" style="margin-top: var(--space-5)">5. Push</h2>
+        <p>Before pushing, check whether <code>dev</code> has moved:</p>
+        <pre><code>git checkout dev
+git status</code></pre>
+        <p>If <code>dev</code> has new commits, merge it into the feature branch and resolve any conflicts:</p>
+        <pre><code>git checkout &lt;feature-branch&gt;
+git merge dev</code></pre>
+        <p>Then push:</p>
+        <pre><code>git push origin &lt;feature-branch&gt;</code></pre>
+
+        <h2 class="display-md" style="margin-top: var(--space-5)">6. Complete Pull Request</h2>
+        <blockquote>
+          PRs are concise and focused on a particular change, bug fix, or feature.<br />
+          <em>Keep it neat, keep it sweet — like a perfect cocktail 🍸</em>
+        </blockquote>
+        <ul>
+          <li>Create the PR in GitHub, named after the branch.</li>
+          <li>Write a descriptive PR description summarizing what changed.</li>
+          <li>Add reviewers.</li>
+          <li>Tests run automatically once the PR is submitted.</li>
+          <li>If tests pass, a manager reviews the code.</li>
+        </ul>
+
+        <h2 class="display-md" style="margin-top: var(--space-5)">7. Merging</h2>
+        <p>
+          Once reviewed and approved, a manager merges the PR into <code>dev</code> using
+          <strong>Squash and merge</strong>, then deletes the feature branch.
+        </p>
+
+        <h2 class="display-md" style="margin-top: var(--space-5)">8. Pull &amp; Delete Branch</h2>
+        <p>After the merge, switch to <code>dev</code>, pull the change down, and delete the local branch:</p>
+        <pre><code>git checkout dev
+git pull
+git branch -D &lt;branch-name&gt;</code></pre>
+      </article>
+
+      <article class="card">
+        <h2 class="display-md">Promoting dev into staging</h2>
+        <pre><code>git switch staging
+git pull
+git checkout -B merge/dev-into-staging
+git merge dev</code></pre>
+        <p>Resolve conflicts if needed, then push:</p>
+        <pre><code>git push --set-upstream origin merge/dev-into-staging</code></pre>
+        <p>
+          Open a PR named <code>merge/dev-into-staging</code> into <code>staging</code>, add
+          reviewers, and wait on the build and tests. Once a manager approves, the PR merges
+          into <code>dev</code> using <strong>Create a merge commit</strong>, and the merge
+          branch is deleted.
+        </p>
+      </article>
+
+      <article class="card">
+        <h2 class="display-md">Promoting staging into main</h2>
+        <pre><code>git switch main
+git pull
+git checkout -B merge/staging-into-main
+git merge staging</code></pre>
+        <p>Resolve conflicts if needed, then push:</p>
+        <pre><code>git push --set-upstream origin merge/staging-into-main</code></pre>
+        <p>
+          Open a PR named <code>merge/staging-into-main</code> into <code>main</code>, add
+          reviewers, and wait on the build and tests. Once a manager approves, the PR merges
+          using <strong>Create a merge commit</strong>, and the merge branch is deleted.
+        </p>
+      </article>
+
+      <div class="cta-row" style="margin-top: var(--space-5)">
+        <a class="btn" href="skills.html">Back to Skills</a>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p class="meta">© <span data-year>2026</span> Logan Riedley · Louisville, KY · <a href="mailto:loganriedley2@gmail.com">loganriedley2@gmail.com</a></p>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>

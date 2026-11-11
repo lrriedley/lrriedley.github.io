@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Night District ERD (excerpt) — Logan Riedley</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#12161f; --panel2:#171c27; --line:#232a38;
+    --text:#e6e9ef; --muted:#8b93a7; --accent:#60a5fa; --cf:#aeb6c9;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;overflow:hidden;}
+  #app{position:relative;width:100vw;height:100vh;}
+  svg{width:100%;height:100%;display:block;background:
+      radial-gradient(circle at 20% 15%, #121826 0%, #0b0e14 55%);}
+
+  .topbar{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;
+    gap:14px;padding:12px 16px;background:linear-gradient(180deg,rgba(11,14,20,.95),rgba(11,14,20,.75));
+    border-bottom:1px solid var(--line);backdrop-filter:blur(6px);flex-wrap:wrap;}
+  .title{font-size:15px;font-weight:700;letter-spacing:.2px;white-space:nowrap;}
+  .title span{color:var(--muted);font-weight:400;margin-left:8px;font-size:12px;}
+  .search{flex:0 0 210px;}
+  .search input{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    padding:7px 10px;border-radius:8px;font-size:13px;outline:none;}
+  .search input:focus{border-color:var(--accent);}
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:7px 12px;
+    border-radius:8px;font-size:12.5px;cursor:pointer;white-space:nowrap;}
+  .btn:hover{border-color:var(--accent);color:var(--accent);}
+  .legend{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .chip{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;
+    border:1px solid var(--line);background:var(--panel2);font-size:11.5px;cursor:pointer;user-select:none;
+    color:var(--muted);transition:opacity .15s;}
+  .chip.off{opacity:.35;}
+  .chip .dot{width:9px;height:9px;border-radius:3px;flex:0 0 auto;}
+  .spacer{flex:1;}
+
+  .notice{position:absolute;top:0;left:0;right:0;z-index:5;padding:8px 16px;
+    background:rgba(251,191,36,.12);border-bottom:1px solid rgba(251,191,36,.3);
+    color:#fbbf24;font-size:12px;text-align:center;}
+
+  .node rect{stroke-width:1.3;cursor:pointer;}
+  .node text{font-size:11px;fill:#0b0e14;font-weight:700;pointer-events:none;}
+  .node .sub{font-size:8.5px;fill:rgba(11,14,20,.6);font-weight:600;pointer-events:none;}
+  .node.dim{opacity:.12;}
+  .node.match rect{stroke:#fff;stroke-width:2.5;}
+  .node.selected rect{stroke:#fff;stroke-width:3;}
+
+  .link{fill:none;stroke:#3a4356;stroke-width:1.1;opacity:.6;}
+  .link.dim{opacity:.05;}
+  .link.hi{stroke:#ffffff;stroke-width:1.8;opacity:.95;}
+
+  .cf-line{stroke:var(--cf);stroke-width:1.35;fill:none;opacity:.7;}
+  .cf.dim{opacity:.05;}
+  .cf.hi .cf-line{stroke:#fff;opacity:1;stroke-width:1.6;}
+
+  .hull{stroke-width:1.4;fill-opacity:.05;stroke-opacity:.30;pointer-events:none;}
+  .hull-label{font-size:19px;font-weight:800;letter-spacing:1.5px;pointer-events:none;
+    text-transform:uppercase;opacity:.85;}
+  .hull.dim,.hull-label.dim{display:none;}
+
+  #panel{position:absolute;top:0;right:0;bottom:0;width:340px;background:var(--panel);
+    border-left:1px solid var(--line);transform:translateX(100%);transition:transform .2s ease;
+    overflow-y:auto;z-index:6;padding:16px;}
+  #panel.open{transform:translateX(0);}
+  #panel h2{margin:0 0 2px 0;font-size:16px;}
+  #panel .domainTag{display:inline-block;font-size:10.5px;padding:2px 8px;border-radius:999px;margin:6px 0 14px 0;}
+  #panel .pkbadge{color:var(--muted);font-size:11px;margin-bottom:10px;}
+  #panel h3{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:16px 0 8px;}
+  .col-row{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+  .col-name{color:var(--text);}
+  .col-name .req{color:#fb7185;margin-left:3px;}
+  .col-type{color:var(--muted);font-family:ui-monospace,Menlo,monospace;font-size:11.5px;}
+  .rel-row{padding:6px 8px;border-radius:6px;font-size:12.5px;cursor:pointer;display:flex;justify-content:space-between;
+    background:var(--panel2);margin-bottom:6px;border:1px solid var(--line);gap:8px;}
+  .rel-row:hover{border-color:var(--accent);color:var(--accent);}
+  .rel-row .card{color:var(--muted);font-size:11px;font-family:ui-monospace,Menlo,monospace;white-space:nowrap;}
+  #closePanel{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);
+    font-size:18px;cursor:pointer;}
+  #closePanel:hover{color:var(--text);}
+
+  #stats{position:absolute;bottom:10px;left:16px;font-size:11px;color:var(--muted);z-index:5;}
+
+  /* crow's-foot notation key */
+  #notation{position:absolute;bottom:34px;left:16px;z-index:5;background:rgba(18,22,31,.92);
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;backdrop-filter:blur(6px);}
+  #notation .nt{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px;}
+  #notation .row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);margin:3px 0;}
+  #notation svg{width:56px;height:14px;background:none;flex:0 0 auto;}
+  #notation .row b{color:var(--text);font-weight:600;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="title">Night District <span>Entity Relationship Diagram — portfolio excerpt</span></div>
+    <div class="search"><input id="search" placeholder="Search tables… (enter to jump)"></div>
+    <div class="legend" id="legend"></div>
+    <div class="spacer"></div>
+    <button class="btn" id="fitBtn">Fit view</button>
+    <button class="btn" id="resetBtn">Reset</button>
+  </div>
+  <div class="notice">
+    Limited excerpt — 11 of roughly 90 tables in Night District's real schema, chosen to
+    demonstrate Crow's Foot notation and normalization. The full schema is proprietary.
+  </div>
+  <svg id="svg"></svg>
+  <div id="stats"></div>
+  <div id="notation"></div>
+  <div id="panel">
+    <button id="closePanel">✕</button>
+    <div id="panelBody"></div>
+  </div>
+</div>
+
+<script>
+// ===========================================================================
+// SUPER-GROUPS  — the coarse buckets we actually think in.
+//   A super-group owns one or more schema "domains" (finer sub-clusters).
+// ===========================================================================
+const SUPERS = {
+  users: {label:"Users",          color:"#818cf8", domains:["identity"]},
+  drink: {label:"Drink Catalog",  color:"#2dd4bf", domains:["catalog","inventory"]},
+  venue: {label:"Venue & Org",    color:"#38bdf8", domains:["org"]},
+  orders:{label:"Orders",         color:"#fbbf24", domains:["commerce"]},
+};
+
+// Finer domain labels (shown in the detail panel).
+const DOMAINS = {
+  identity:"Users & Guests", org:"Venues & Org Structure", catalog:"Drink Catalog & Taxonomy",
+  inventory:"Menu & Inventory", commerce:"Orders & Payments",
+};
+
+// domain -> super lookup, derived from SUPERS.
+const superOfDomain = {};
+Object.entries(SUPERS).forEach(([k,s])=>s.domains.forEach(d=>superOfDomain[d]=k));
+
+// ---------------------------------------------------------------------------
+// TABLE DATA — a curated, simplified excerpt of Night District's real schema.
+//   Chosen to show a hierarchical taxonomy (categories → subcategories →
+//   drinks), org structure (venues → bars → menus), and two junction tables
+//   resolving many-to-many relationships (menus_drinks, orders_drinks).
+// col spec syntax:  "name:type"  (+ "!" = required)  (+ "→target" = FK)
+// ---------------------------------------------------------------------------
+
+const RAW_TABLES = [
+{id:"venues", domain:"org", pk:"bigint", cols:["name:string","phone:string","email:string","is_active:boolean","created_at:datetime!","updated_at:datetime!"]},
+{id:"bars", domain:"org", pk:"bigint", cols:["venue_id:bigint!→venues","name:string","created_at:datetime!","updated_at:datetime!"]},
+{id:"menus", domain:"org", pk:"bigint", cols:["venue_id:bigint!→venues","bar_id:bigint→bars","title:string","created_at:datetime!","updated_at:datetime!"]},
+{id:"categories", domain:"catalog", pk:"bigint", cols:["name:string","created_at:datetime!","updated_at:datetime!"]},
+{id:"subcategories", domain:"catalog", pk:"bigint", cols:["category_id:bigint!→categories","name:string","created_at:datetime!","updated_at:datetime!"]},
+{id:"drinks", domain:"catalog", pk:"bigint", cols:["category_id:bigint!→categories","subcategory_id:bigint→subcategories","name:string","abv:float","created_at:datetime!","updated_at:datetime!"]},
+{id:"venue_drink_variants", domain:"inventory", pk:"bigint", cols:["venue_id:bigint!→venues","drink_id:bigint!→drinks","price:float","in_stock:boolean","created_at:datetime!","updated_at:datetime!"]},
+{id:"menus_drinks", domain:"inventory", pk:"bigint", cols:["menu_id:bigint!→menus","venue_drink_variant_id:bigint!→venue_drink_variants","shown:boolean","created_at:datetime!","updated_at:datetime!"]},
+{id:"guests", domain:"identity", pk:"uuid", cols:["bio:text","created_at:datetime!","updated_at:datetime!"]},
+{id:"orders", domain:"commerce", pk:"uuid", cols:["venue_id:bigint!→venues","bar_id:bigint→bars","guest_id:uuid!→guests","total:float","status:integer","created_at:datetime!","updated_at:datetime!"]},
+{id:"orders_drinks", domain:"commerce", pk:"uuid", cols:["order_id:uuid!→orders","menus_drink_id:bigint→menus_drinks","quantity:integer","created_at:datetime!","updated_at:datetime!"]},
+];
+
+// ---------------------------------------------------------------------------
+// PARSE columns + derive FK edges
+// ---------------------------------------------------------------------------
+function parseCol(raw){
+  let str = raw, fk = null;
+  const fkMatch = str.match(/→([\w]+)/);
+  if(fkMatch){ fk = fkMatch[1]; str = str.replace(/→[\w]+/,''); }
+  const required = str.includes('!');
+  str = str.replace('!','');
+  const idx = str.indexOf(':');
+  return {name:str.slice(0,idx), type:str.slice(idx+1).trim(), required, fk};
+}
+
+const tableIds = new Set(RAW_TABLES.map(t=>t.id));
+const nodes = RAW_TABLES.map(t=>({
+  id:t.id, domain:t.domain, super:superOfDomain[t.domain], pk:t.pk,
+  cols:t.cols.map(parseCol),
+}));
+const nodeById = new Map(nodes.map(n=>[n.id,n]));
+
+// One link per (child table -> parent table). `req` is true when the FK column
+// is NOT NULL — that decides mandatory vs optional on the "one" (parent) side.
+const linksMap = new Map();
+nodes.forEach(n=>{
+  n.cols.forEach(c=>{
+    if(c.fk && tableIds.has(c.fk)){
+      const key = n.id+"→"+c.fk;
+      if(!linksMap.has(key)) linksMap.set(key, {source:n.id, target:c.fk, cols:[], req:false});
+      const L = linksMap.get(key); L.cols.push(c.name); L.req = L.req || c.required;
+    }
+  });
+});
+const links = Array.from(linksMap.values());
+
+// Crow's-foot phrasing for the side panel.
+//  child (FK holder) side is always "zero or many"; parent side is
+//  "one and only one" if the FK is required, else "zero or one".
+function cardLabel(l){ return l.req ? "1 — 0..*" : "0..1 — 0..*"; }
+
+// relation index for side panel (outgoing + incoming)
+const relIndex = new Map(nodes.map(n=>[n.id,{out:[],in:[]}]));
+links.forEach(l=>{
+  relIndex.get(l.source).out.push({table:l.target, via:l.cols.join(', '), card:l.req?"* → 1":"* → 0..1"});
+  relIndex.get(l.target).in.push({table:l.source, via:l.cols.join(', '), card:l.req?"1 → *":"0..1 → *"});
+});
+
+document.getElementById('stats').textContent =
+  `${nodes.length} tables · ${links.length} foreign-key relationships · ${Object.keys(SUPERS).length} groups`;
+
+// ---------------------------------------------------------------------------
+// LAYOUT SEEDS — deliberate placement of super-groups in a virtual canvas.
+// ---------------------------------------------------------------------------
+const SUPER_POS = {
+  drink:[380,420], venue:[900,420], users:[380,780], orders:[900,780],
+};
+const domainCenter = {};
+Object.entries(SUPERS).forEach(([k,s])=>{
+  const c = SUPER_POS[k], ds = s.domains, n = ds.length;
+  ds.forEach((d,i)=>{
+    const ang = n>1 ? (i/n)*2*Math.PI - Math.PI/2 : 0;
+    const rr  = n>1 ? 140 : 0;
+    domainCenter[d] = {x:c[0]+rr*Math.cos(ang), y:c[1]+rr*Math.sin(ang)};
+  });
+});
+nodes.forEach((n,i)=>{
+  const c = domainCenter[n.domain];
+  n.x = c.x + Math.cos(i*2.4)*80;
+  n.y = c.y + Math.sin(i*2.4)*80;
+});
+
+function nodeWidth(n){ return Math.max(118, n.id.length*6.6 + 26); }
+const NODE_H = 30;
+
+// ---------------------------------------------------------------------------
+// RENDER SCAFFOLD
+// ---------------------------------------------------------------------------
+const svg = d3.select('#svg');
+const zoomLayer = svg.append('g').attr('class','zoom-layer');
+const hullLayer = zoomLayer.append('g').attr('class','hulls');
+const linkLayer = zoomLayer.append('g').attr('class','links');
+const cfLayer   = zoomLayer.append('g').attr('class','cf-layer');
+const nodeLayer = zoomLayer.append('g').attr('class','nodes');
+
+// ---- super-group hulls + labels ----
+const superList = Object.keys(SUPERS);
+const hullSel = hullLayer.selectAll('path.hull').data(superList).enter().append('path')
+  .attr('class','hull')
+  .attr('fill', k=>SUPERS[k].color).attr('stroke', k=>SUPERS[k].color);
+const hullLabelSel = hullLayer.selectAll('text.hull-label').data(superList).enter().append('text')
+  .attr('class','hull-label').attr('fill', k=>SUPERS[k].color)
+  .text(k=>SUPERS[k].label);
+
+// ---- links ----
+const linkSel = linkLayer.selectAll('path.link').data(links).enter().append('path')
+  .attr('class','link');
+
+// ---- crow's-foot endpoint glyphs (two per link: child + parent) ----
+const ends = [];
+links.forEach(l=>{ ends.push({link:l,end:'child'}); ends.push({link:l,end:'parent'}); });
+
+const SP=6.5, F=13, R=3.6, BAR=5;                 // glyph geometry
+const REACH = {many:F+2*R+5, one_req:13, one_opt:F+R+8};  // line trim per glyph
+
+function buildGlyph(g,type){
+  if(type==='many'){                              // zero-or-many:  ○<
+    g.append('path').attr('class','cf-line').attr('d',`M0,${-SP}L${F},0M0,0L${F},0M0,${SP}L${F},0`);
+    g.append('circle').attr('class','cf-line').attr('cx',F+R+3).attr('cy',0).attr('r',R);
+  } else if(type==='one_req'){                    // one and only one:  ‖
+    g.append('path').attr('class','cf-line').attr('d',`M6,${-BAR}L6,${BAR}M11,${-BAR}L11,${BAR}`);
+  } else {                                        // zero-or-one:  ○|
+    g.append('path').attr('class','cf-line').attr('d',`M6,${-BAR}L6,${BAR}`);
+    g.append('circle').attr('class','cf-line').attr('cx',F+2).attr('cy',0).attr('r',R);
+  }
+}
+function endType(d){ return d.end==='child' ? 'many' : (d.link.req?'one_req':'one_opt'); }
+
+const cfSel = cfLayer.selectAll('g.cf').data(ends).enter().append('g').attr('class','cf')
+  .each(function(d){ buildGlyph(d3.select(this), endType(d)); });
+
+// ---- nodes ----
+const nodeSel = nodeLayer.selectAll('g.node').data(nodes).enter().append('g')
+  .attr('class','node')
+  .call(d3.drag()
+    .on('start', (ev,d)=>{ if(!ev.active) sim.alphaTarget(0.25).restart(); d.fx=d.x; d.fy=d.y; })
+    .on('drag',  (ev,d)=>{ d.fx=ev.x; d.fy=ev.y; })
+    .on('end',   (ev,d)=>{ if(!ev.active) sim.alphaTarget(0); d.fx=null; d.fy=null; }))
+  .on('click', (ev,d)=>{ ev.stopPropagation(); selectNode(d); });
+
+nodeSel.append('rect')
+  .attr('width', d=>nodeWidth(d)).attr('height', NODE_H)
+  .attr('x', d=>-nodeWidth(d)/2).attr('y', -NODE_H/2).attr('rx', 7)
+  .attr('fill', d=>SUPERS[d.super].color)
+  .attr('stroke', d=>d3.color(SUPERS[d.super].color).darker(1.4));
+nodeSel.append('text').attr('text-anchor','middle').attr('dy',-1).text(d=>d.id);
+nodeSel.append('text').attr('class','sub').attr('text-anchor','middle').attr('dy',10)
+  .text(d=>`${d.cols.length} cols · ${d.pk}`);
+
+// ---------------------------------------------------------------------------
+// FORCE SIMULATION
+// ---------------------------------------------------------------------------
+const sim = d3.forceSimulation(nodes)
+  .force('link', d3.forceLink(links).id(d=>d.id).distance(96).strength(0.28))
+  .force('charge', d3.forceManyBody().strength(-300))
+  .force('collide', d3.forceCollide().radius(d=>nodeWidth(d)/2 + 16))
+  .force('x', d3.forceX(d=>domainCenter[d.domain].x).strength(0.18))
+  .force('y', d3.forceY(d=>domainCenter[d.domain].y).strength(0.18))
+  .on('tick', ticked);
+for(let i=0;i<320;i++) sim.tick();   // pre-settle before first paint
+
+// ---------------------------------------------------------------------------
+// GEOMETRY HELPERS
+// ---------------------------------------------------------------------------
+function edgePoint(node, tx, ty){
+  let dx = tx-node.x, dy = ty-node.y;
+  if(dx===0 && dy===0) dx = 1;
+  const w = nodeWidth(node)/2, h = NODE_H/2;
+  const scale = 1 / Math.max(Math.abs(dx)/w, Math.abs(dy)/h);
+  return {x:node.x+dx*scale, y:node.y+dy*scale, angle:Math.atan2(dy,dx)};
+}
+
+const hullLine = d3.line().curve(d3.curveCatmullRomClosed.alpha(0.5));
+function hullPathFor(k){
+  const ns = nodes.filter(n=>n.super===k);
+  const pts = [];
+  ns.forEach(n=>{ const w=nodeWidth(n)/2+26, h=NODE_H/2+26;
+    pts.push([n.x-w,n.y-h],[n.x+w,n.y-h],[n.x+w,n.y+h],[n.x-w,n.y+h]); });
+  const hull = d3.polygonHull(pts);
+  return hull ? hullLine(hull)+'Z' : null;
+}
+function hullLabelPos(k){
+  const ns = nodes.filter(n=>n.super===k);
+  let minX=Infinity,minY=Infinity;
+  ns.forEach(n=>{ minX=Math.min(minX,n.x-nodeWidth(n)/2); minY=Math.min(minY,n.y-NODE_H/2); });
+  return [minX+2, minY-14];
+}
+
+// ---------------------------------------------------------------------------
+// TICK
+// ---------------------------------------------------------------------------
+function ticked(){
+  links.forEach(l=>{ l._cp = edgePoint(l.source, l.target.x, l.target.y);
+                     l._pp = edgePoint(l.target, l.source.x, l.source.y); });
+
+  linkSel.attr('d', l=>{
+    const a=l._cp, b=l._pp;
+    const ax=a.x+Math.cos(a.angle)*REACH.many,  ay=a.y+Math.sin(a.angle)*REACH.many;
+    const rp=l.req?REACH.one_req:REACH.one_opt;
+    const bx=b.x+Math.cos(b.angle)*rp,          by=b.y+Math.sin(b.angle)*rp;
+    return `M${ax},${ay}L${bx},${by}`;
+  });
+  cfSel.attr('transform', d=>{
+    const p = d.end==='child' ? d.link._cp : d.link._pp;
+    return `translate(${p.x},${p.y}) rotate(${p.angle*180/Math.PI})`;
+  });
+  nodeSel.attr('transform', d=>`translate(${d.x},${d.y})`);
+  hullSel.attr('d', hullPathFor);
+  hullLabelSel.attr('x', k=>hullLabelPos(k)[0]).attr('y', k=>hullLabelPos(k)[1]);
+}
+ticked();
+
+// ---------------------------------------------------------------------------
+// ZOOM / PAN / FIT
+// ---------------------------------------------------------------------------
+const W = window.innerWidth, H = window.innerHeight;
+const zoom = d3.zoom().scaleExtent([0.06,4]).on('zoom', ev=>zoomLayer.attr('transform', ev.transform));
+svg.call(zoom);
+
+function fitView(){
+  const xs=nodes.map(n=>n.x), ys=nodes.map(n=>n.y);
+  const minX=Math.min(...xs)-160, maxX=Math.max(...xs)+160;
+  const minY=Math.min(...ys)-120, maxY=Math.max(...ys)+120;
+  const w=maxX-minX, h=maxY-minY;
+  const scale=Math.min(W/w, H/h, 1.1);
+  const tx=W/2 - scale*(minX+maxX)/2, ty=H/2 - scale*(minY+maxY)/2;
+  svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(scale));
+}
+setTimeout(fitView, 30);
+document.getElementById('fitBtn').addEventListener('click', fitView);
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  clearSelection(); document.getElementById('search').value=''; applySearch('');
+  activeSupers=new Set(superList); document.querySelectorAll('.chip').forEach(c=>c.classList.remove('off'));
+  applySuperFilter(); fitView();
+});
+
+// ---------------------------------------------------------------------------
+// SELECTION / DETAIL PANEL
+// ---------------------------------------------------------------------------
+let selected = null;
+function neighborsOf(id){
+  const s = new Set([id]);
+  links.forEach(l=>{ const src=l.source.id||l.source, tgt=l.target.id||l.target;
+    if(src===id) s.add(tgt); if(tgt===id) s.add(src); });
+  return s;
+}
+function isTouching(l,id){ return (l.source.id||l.source)===id || (l.target.id||l.target)===id; }
+
+function selectNode(d){
+  selected = d.id;
+  const nb = neighborsOf(d.id);
+  nodeSel.classed('dim', n=>!nb.has(n.id)).classed('selected', n=>n.id===d.id);
+  linkSel.classed('hi', l=>isTouching(l,d.id)).classed('dim', l=>!isTouching(l,d.id));
+  cfSel.classed('hi', e=>isTouching(e.link,d.id)).classed('dim', e=>!isTouching(e.link,d.id));
+  renderPanel(d);
+  document.getElementById('panel').classList.add('open');
+}
+function clearSelection(){
+  selected = null;
+  nodeSel.classed('dim', false).classed('selected', false);
+  linkSel.classed('hi', false).classed('dim', false);
+  cfSel.classed('hi', false).classed('dim', false);
+  document.getElementById('panel').classList.remove('open');
+}
+svg.on('click', ()=>clearSelection());
+document.getElementById('closePanel').addEventListener('click', clearSelection);
+
+function renderPanel(d){
+  const sup = SUPERS[d.super];
+  const rel = relIndex.get(d.id);
+  let html = `<h2>${d.id}</h2>
+    <span class="domainTag" style="background:${sup.color}22;color:${sup.color};border:1px solid ${sup.color}55">${sup.label} · ${DOMAINS[d.domain]}</span>
+    <div class="pkbadge">primary key: <b>${d.pk}</b> &nbsp;·&nbsp; ${d.cols.length} columns</div>
+    <h3>Columns</h3>`;
+  d.cols.forEach(c=>{
+    html += `<div class="col-row"><span class="col-name">${c.name}${c.required?'<span class="req">*</span>':''}</span>
+      <span class="col-type">${c.type}${c.fk?` → ${c.fk}`:''}</span></div>`;
+  });
+  if(rel.out.length){
+    html += `<h3>References (out)</h3>`;
+    rel.out.forEach(r=>{ html += `<div class="rel-row" data-jump="${r.table}"><span>${r.table} <span class="via" style="color:var(--muted);font-size:11px">(${r.via})</span></span><span class="card">${r.card}</span></div>`; });
+  }
+  if(rel.in.length){
+    html += `<h3>Referenced by (in)</h3>`;
+    rel.in.forEach(r=>{ html += `<div class="rel-row" data-jump="${r.table}"><span>${r.table} <span class="via" style="color:var(--muted);font-size:11px">(${r.via})</span></span><span class="card">${r.card}</span></div>`; });
+  }
+  document.getElementById('panelBody').innerHTML = html;
+  document.querySelectorAll('.rel-row').forEach(el=>{
+    el.addEventListener('click', ()=> selectNode(nodeById.get(el.dataset.jump)) );
+  });
+}
+
+// ---------------------------------------------------------------------------
+// SEARCH
+// ---------------------------------------------------------------------------
+function applySearch(q){
+  q = q.trim().toLowerCase();
+  nodeSel.classed('match', false);
+  if(!q){ if(!selected){ nodeSel.classed('dim', false); linkSel.classed('dim', false); cfSel.classed('dim', false); } return; }
+  nodeSel.classed('match', d=>d.id.toLowerCase().includes(q));
+  nodeSel.classed('dim', d=>!d.id.toLowerCase().includes(q));
+  linkSel.classed('dim', true); cfSel.classed('dim', true);
+}
+const searchInput = document.getElementById('search');
+searchInput.addEventListener('input', e=>applySearch(e.target.value));
+searchInput.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){
+    const q = e.target.value.trim().toLowerCase();
+    const match = nodes.find(n=>n.id.toLowerCase().includes(q));
+    if(match){
+      selectNode(match);
+      svg.transition().duration(500).call(zoom.transform,
+        d3.zoomIdentity.translate(W/2-match.x*1.1, H/2-match.y*1.1).scale(1.1));
+    }
+  }
+});
+
+// ---------------------------------------------------------------------------
+// SUPER-GROUP LEGEND / FILTER
+// ---------------------------------------------------------------------------
+let activeSupers = new Set(superList);
+const legend = document.getElementById('legend');
+superList.forEach(k=>{
+  const chip = document.createElement('div');
+  chip.className = 'chip';
+  chip.innerHTML = `<span class="dot" style="background:${SUPERS[k].color}"></span>${SUPERS[k].label}`;
+  chip.addEventListener('click', ()=>{
+    if(activeSupers.has(k)){ activeSupers.delete(k); chip.classList.add('off'); }
+    else { activeSupers.add(k); chip.classList.remove('off'); }
+    applySuperFilter();
+  });
+  legend.appendChild(chip);
+});
+function superOf(ref){ return (ref.super) || nodeById.get(ref).super; }
+function applySuperFilter(){
+  const on = s => activeSupers.has(s);
+  nodeSel.style('display', d=>on(d.super)?null:'none');
+  hullSel.style('display', k=>on(k)?null:'none');
+  hullLabelSel.style('display', k=>on(k)?null:'none');
+  linkSel.style('display', l=>(on(superOf(l.source)) && on(superOf(l.target)))?null:'none');
+  cfSel.style('display', e=>(on(superOf(e.link.source)) && on(superOf(e.link.target)))?null:'none');
+}
+
+// ---------------------------------------------------------------------------
+// CROW'S-FOOT NOTATION KEY
+// ---------------------------------------------------------------------------
+(function(){
+  const rows = [
+    ['zero or many', 'M2,7 L20,7 M20,7 L34,1 M20,7 L34,7 M20,7 L34,13', '<circle cx="14" cy="7" r="3.4"/>'],
+    ['one & only one','M2,7 L34,7 M24,2 L24,12 M29,2 L29,12', ''],
+    ['zero or one',  'M2,7 L34,7 M24,2 L24,12', '<circle cx="31" cy="7" r="3.4"/>'],
+  ];
+  const html = `<div class="nt">Crow's-foot notation</div>` + rows.map(r=>
+    `<div class="row"><svg viewBox="0 0 40 14"><g fill="none" stroke="var(--cf)" stroke-width="1.4">${r[2]}<path d="${r[1]}"/></g></svg><b>${r[0]}</b></div>`
+  ).join('') + `<div class="row" style="margin-top:6px">FK required → <b style="margin:0 4px">1</b> · nullable → <b style="margin:0 4px">0..1</b></div>`;
+  document.getElementById('notation').innerHTML = html;
+})();
+
+// ---------------------------------------------------------------------------
+// HEADER STACKING — the topbar wraps onto a second line at narrow widths
+// (e.g. embedded in an iframe), so the notice/panel offsets are measured
+// from its real rendered height rather than a fixed pixel guess.
+// ---------------------------------------------------------------------------
+function positionHeader(){
+  const topbar = document.querySelector('.topbar');
+  const notice = document.querySelector('.notice');
+  const panel = document.getElementById('panel');
+  const th = topbar.getBoundingClientRect().height;
+  notice.style.top = th + 'px';
+  const nh = notice.getBoundingClientRect().height;
+  panel.style.top = (th + nh) + 'px';
+}
+positionHeader();
+window.addEventListener('resize', positionHeader);
+</script>
+</body>
+</html>

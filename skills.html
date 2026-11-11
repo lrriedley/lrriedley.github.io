@@ -19,8 +19,8 @@
       <a href="assets/docs/logan-riedley-resume.pdf" target="_blank" rel="noopener">Résumé</a>
       <a href="cover-letter.html">Cover Letter</a>
       <!-- <a href="product-strategy.html">Product &amp; Strategy</a> -->
-      <a href="technical-work.html">Technical Work</a>
       <a href="skills.html" aria-current="page">Skills</a>
+      <a href="technical-work.html">Technical Work</a>
       <a href="references.html">References</a>
     </nav>
   </div>
@@ -33,7 +33,7 @@
       <p class="eyebrow label">Skills</p>
       <h1 class="display-xl">What I Bring to the Table</h1>
       <p class="lede body-lg">
-        Three courses: product, technical, and hospitality. Each skill is mapped to where
+        Three courses including product, technical, and hospitality. Each skill is mapped to where
         I've actually used it, not a self-rated bar.
       </p>
     </section>
@@ -134,13 +134,13 @@
       </div>
       <div class="card">
         <ul class="menu-items">
-          <li class="menu-item">
+          <li class="menu-item"> 
             <h3 class="menu-item-name">Project Management</h3>
-            <p class="menu-item-note">CAPM-certified and Scrum-trained. As Product Manager, I take the Night District guest app from concept to a working full-stack application, writing the roadmap and leading the team to carry it out.</p>
+            <p class="menu-item-note">CAPM-certified and Scrum-trained. As Product Manager, I took the Night District guest app from concept to a working full-stack application, writing the roadmap and leading the team to carry it out.</p>
           </li>
           <li class="menu-item">
             <h3 class="menu-item-name">Agile Development</h3>
-            <p class="menu-item-note">Run sprint planning, daily stand-ups, and retrospectives for the Night District team, 2021 to present.</p>
+            <p class="menu-item-note">I run sprint planning, daily stand-ups, and retrospectives for the Night District team, 2021 to present.</p>
           </li>
           <li class="menu-item">
             <h3 class="menu-item-name">Backlog Management &amp; Prioritization</h3>
@@ -164,19 +164,44 @@
           <li class="menu-item">
             <h3 class="menu-item-name">Swift &amp; SwiftUI</h3>
             <p class="menu-item-note">Built the Night District guest app from an empty Xcode project to a shipped App Store listing.</p>
-            <img class="menu-item-image" src="assets/img/screenshots/night-district-screens.png" alt="Night District guest app screens showing the drink dictionary, a mojito ordering flow, a venue page, and a spirit review page, built in Swift and SwiftUI" loading="lazy" />
+            <img class="menu-item-image menu-item-image--sm" src="assets/img/screenshots/night-district-screens.png" alt="Night District guest app screens showing the drink dictionary, a mojito ordering flow, a venue page, and a spirit review page, built in Swift and SwiftUI" loading="lazy" />
           </li>
           <li class="menu-item">
             <h3 class="menu-item-name">Flutter &amp; Dart</h3>
             <p class="menu-item-note">Led UI/UX development on Malsi, a social media app live on the App Store.</p>
+            <img class="menu-item-image menu-item-image--sm" src="assets/img/screenshots/malsi-screens.png" alt="Malsi app screens: a photo post in the feed, a creator profile with follower count, and a short-video feed" loading="lazy" />
           </li>
           <li class="menu-item">
             <h3 class="menu-item-name">Git &amp; GitHub</h3>
-            <p class="menu-item-note">Open-sourced Bar Ticket, a macOS tool I built and maintain publicly.</p>
+            <p class="menu-item-note">
+              I designed Night District's Git workflow that includes protected branches, a feature-branch
+              naming convention, PR review and tests before merge, and a dev to staging to
+              main promotion path with a different merge strategy at each stage. I also developed
+              Bar Ticket, an open-source macOS tool for converting comments to GitHub issues.
+            </p>
+            <a class="btn" style="margin-top: var(--space-3)" href="git-workflow.html">View the Workflow Doc</a>
+          </li>
+          <li class="menu-item">
+            <h3 class="menu-item-name">Database Design</h3>
+            <p class="menu-item-note">
+              I led Night District's database design using Crow's Foot notation and
+              normalization to keep roughly 90 tables consistent as the schema grew. Below is
+              a limited, interactive excerpt, 11 of those tables, built to demonstrate the
+              notation without exposing the proprietary schema.
+            </p>
+            <div class="menu-item-embed">
+              <iframe src="database-design.html" title="Night District ERD, portfolio excerpt" loading="lazy"></iframe>
+            </div>
+            <a class="btn" style="margin-top: var(--space-3)" href="database-design.html" target="_blank" rel="noopener">Open Full Screen</a>
           </li>
           <li class="menu-item">
             <h3 class="menu-item-name">Figma &amp; Adobe XD</h3>
-            <p class="menu-item-note">Designed the interfaces behind Night District's app and this site's own layout.</p>
+            <p class="menu-item-note">Wireframed Night District's screens in Figma to show structure and flow clearly enough for engineering to build straight from them.</p>
+            <div class="menu-item-gallery">
+              <img src="assets/img/figma/landing-page.png" alt="Night District marketing landing page wireframe in Figma, showing the hero section and ordering flow mockup" loading="lazy" />
+              <img src="assets/img/figma/orders-admin.png" alt="Night District admin Orders Tab wireframe in Figma, showing new and completed orders by bar" loading="lazy" />
+              <img src="assets/img/figma/event-tab.svg" alt="Night District admin Event Tab wireframe in Figma" loading="lazy" />
+            </div>
           </li>
         </ul>
       </div>
